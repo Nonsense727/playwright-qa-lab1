@@ -68,3 +68,35 @@ test('Буруу нууц үгээр нэвтрэх үед алдааны мес
     'Username and password do not match any user in this service'
   );
 });
+
+/*
+ * Тест 3: Нэвтэрсний дараа бараа сагслах (post-login action)
+ *
+ * Нэвтэрсний дараа "Sauce Labs Backpack"-ийг
+ * сагслалж, сагс дээр үзсэн бүтээгдэхүүнт зургийг шалгах.
+ */
+test('Нэвтэрсний дараа бараа сагслах', async ({ page }) => {
+  // 1. Нэвтрэх
+  await page.goto('/');
+  await page.getByPlaceholder('Username').fill('standard_user');
+  await page.getByPlaceholder('Password').fill('secret_sauce');
+  await page.getByRole('button', { name: 'Login' }).click();
+
+  // 2. Баталгүйцүүлэх: Products хуудас үзүүлсэн
+  await expect(page.getByText('Products', { exact: true })).toBeVisible();
+
+  // 3. "Sauce Labs Backpack" бараагийн "Add to cart" товчийг дарах.
+  await page.getByRole('button', { name: 'Add to cart' }).first().click();
+
+  // 4. Сагс руу шилжих (data-test="shopping-cart-link" аргументтэй link)
+  await page.getByTestId('shopping-cart-link').click();
+  await expect(page).toHaveURL(/.*cart\.html/);
+
+  // 5. Сагслын дээр "Sauce Labs Backpack" байгааг шалгах
+  await expect(page.getByText('Sauce Labs Backpack', { exact: true })).toBeVisible();
+
+  // 6. Logout хийж, тестийг зөв төгсгө
+  await page.getByRole('button', { name: 'Open Menu' }).click();
+  await page.getByRole('link', { name: 'Logout' }).click();
+  await expect(page).toHaveURL('/');
+});
