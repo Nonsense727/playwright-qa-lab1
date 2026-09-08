@@ -3,20 +3,20 @@ import { defineConfig, devices } from '@playwright/test';
 export default defineConfig({
   testDir: './tests',
   fullyParallel: false,
-  /* Тест унавал 1 удаа дахин оролдох */
+  /* Retry on failure */
   retries: 1,
-  /* HTML тайлан үүсгэх */
+  /* Generate HTML report */
   reporter: 'html',
   use: {
-    /* Үндсэн URL */
+    /* Base URL for the application */
     baseURL: 'https://www.saucedemo.com',
-    /* Trace мөшгилтийг хадгалах */
+    /* Collect trace for every test */
     trace: 'on',
-    /* Видео бичлэг хийх */
+    /* Record video for every test */
     video: 'on',
-    /* Унасан үед дэлгэцийн зураг авах */
+    /* Take screenshot only when a test fails */
     screenshot: 'only-on-failure',
-    /* data-testid-ийн оронд data-test атрибут ашиглах */
+    /* Saucedemo uses data-test attribute (not data-testid) */
     testIdAttribute: 'data-test',
   },
   projects: [
