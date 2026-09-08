@@ -1,14 +1,12 @@
 import { test, expect } from '@playwright/test';
 
 /*
- * This file is a RECORDING of `npx playwright codegen https://www.saucedemo.com`.
- * Codegen opens an interactive browser, records actions, and generates code
- * in TS/JS, Python, Java, or C#. This version was generated for comparison
- * with the hand-written tests in tests/mytest.spec.ts.
+ * Энэ файл нь `npx playwright codegen https://www.saucedemo.com` командаар
+ * автоматаар үүсгэгдсэн код юм. tests/mytest.spec.ts дахь гараар бичсэн
+ * кодтой харьцуулах зорилгоор хадгалав.
  *
- * Key difference: codegen uses CSS ID selectors (`#user-name`, `#login-button`)
- * instead of semantic locators. It also lacks test isolation (no logout),
- * assertions, and trace/video configuration.
+ * Гол ялгаа: Codegen нь semantic locator-ийн оронд CSS ID selector ашигладаг
+ * ба тест тусгаарлалт (logout) болон нарийвчилсан assertion дутуу байдаг.
  */
 
 test('login flow (codegen)', async ({ page }) => {

@@ -3,22 +3,22 @@ import { defineConfig, devices } from '@playwright/test';
 export default defineConfig({
   testDir: './tests',
   fullyParallel: false,
-  /* Capture trace on first retry and on failures */
+  /* Тест унавал 1 удаа дахин оролдох */
   retries: 1,
-  /* Reporter to use */
+  /* HTML тайлан үүсгэх */
   reporter: 'html',
   use: {
-    /* Base URL for the application */
+    /* Үндсэн URL */
     baseURL: 'https://www.saucedemo.com',
-    /* Collect trace when retrying a test or on failure */
+    /* Trace мөшгилтийг хадгалах */
     trace: 'on',
-    /* Record video for all tests */
+    /* Видео бичлэг хийх */
     video: 'on',
-    /* Take screenshot on failure */
+    /* Унасан үед дэлгэцийн зураг авах */
     screenshot: 'only-as-artifact',
-    /* Saucedemo uses data-test attribute (not data-testid) */
+    /* data-testid-ийн оронд data-test атрибут ашиглах */
     testIdAttribute: 'data-test',
-    /* Browser to use */
+    /* Хөтөч */
     browserName: 'chromium',
   },
   projects: [
@@ -27,6 +27,6 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
     },
   ],
-  /* Run your local dev server before the tests */
+  /* Тест ажиллуулахаас өмнө локал серверийг асаах тохиргоо */
   // webServer: { command: 'npm run start', url: 'http://127.0.0.1:3000' },
 });

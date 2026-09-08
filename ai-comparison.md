@@ -1,80 +1,67 @@
-# AI Assistance Comparison
+# AI туслахын харьцуулалт (AI Assistance Comparison)
 
-This exercise compares AI-generated test code (via Playwright Codegen,
-ChatGPT, Claude, Copilot) with hand-written tests to identify gaps and
-improvements.
+Энэхүү хэсэгт AI хэрэгслүүдийн (Playwright Codegen, ChatGPT, Claude, Copilot) үүсгэсэн тестийн кодыг гараар бичсэн тесттэй харьцуулж, дутагдалтай талууд болон сайжруулалтыг тодорхойлов.
 
-The codegen output is saved in `docs/codegen.ts`. Below is the comparison.
+Codegen-ийн үүсгэсэн код `docs/codegen.ts` файлд хадгалагдсан байгаа бөгөөд доорх байдлаар харьцуулав.
 
-## 1. Locator Selection
+## 1. Locator сонголт (Locator Selection)
 
-AI/codegen uses **CSS ID selectors**:
+AI/codegen нь **CSS ID сонгогч (selectors)** ашигладаг:
 ```typescript
 await page.locator('#user-name').fill('standard_user');
 await page.locator('#login-button').click();
 ```
 
-Hand-written code uses **semantic locators**:
+Гараар бичсэн код нь **Semantic locator**-ууд ашигладаг:
 ```typescript
 await page.getByPlaceholder('Username').fill('standard_user');
 await page.getByRole('button', { name: 'Login' }).click();
 ```
 
-**Difference:** `getByPlaceholder`, `getByRole`, `getByTestId` are based on
-the accessibility tree and are more resilient to DOM changes. ID selectors
-break if the element's ID changes or is removed.
+**Ялгаа:** `getByPlaceholder`, `getByRole`, `getByTestId` нь вебийн хүртээмжтэй байдлын мод (accessibility tree) дээр суурилсан тул DOM бүтэц өөрчлөгдөхөд илүү тэсвэртэй. Харин ID selector нь элементийн ID өөрчлөгдөх эсвэл устахад шууд ажиллахаа больдог.
 
-## 2. Assertions
+## 2. Шалгах нөхцөлүүд (Assertions)
 
-AI code uses limited assertions:
+AI-ийн код нь хязгаарлагдмал цөөн assertion ашигладаг:
 ```typescript
 await expect(page.locator('h3')).toContainText('Products');
 ```
 
-Hand-written code uses multiple, precise assertions:
+Гараар бичсэн код нь олон бөгөөд нарийн тодорхой шалгалтууд хийдэг:
 ```typescript
 await expect(page.getByText('Products', { exact: true })).toBeVisible();
 await expect(page).toHaveURL(/.*inventory\.html/);
 ```
 
-**Difference:** Hand-written tests verify both content (visible) and state
-(URL), providing stronger coverage. The `exact: true` flag prevents
-false matches from partial text.
+**Ялгаа:** Гараар бичсэн тест нь агуулга (дэлгэцэнд харагдаж буй эсэх) болон төлөв (хуудасны URL)-ийг давхар баталгаажуулж, илүү бүрэн шалгадаг. `exact: true` тохиргоо нь текст хагас таарснаас үүсэх хуурамч эерэг үр дүнгээс сэргийлдэг.
 
-## 3. Error / Negative Test
+## 3. Алдаа шалгах буюу Сөрөг тест (Negative Test)
 
-AI code does not test the **error message** on failed login.
-Hand-written code verifies the error element:
+AI-ийн код нь нэвтрэлт амжилтгүй болох үеийн **алдааны мессежийг** шалгадаггүй.  
+Гараар бичсэн код нь алдааны элементийг бүрэн шалгадаг:
 ```typescript
 await expect(page.getByTestId('error')).toContainText(
   'Username and password do not match any user in this service'
 );
 ```
 
-**Difference:** AI-generated code only covers the happy path. The
-negative test is essential for robustness.
+**Ялгаа:** AI-ийн үүсгэсэн код нь зөвхөн амжилттай тохиолдлыг (happy path) хамардаг. Системийн найдвартай ажиллагааг шалгахад сөрөг тест зайлшгүй шаардлагатай.
 
-## 4. Test Isolation
+## 4. Тестийн тусгаарлалт (Test Isolation)
 
-AI code does **not** log out after tests — page state carries over
-between tests, causing flaky failures.
-Hand-written code logs out and verifies URL after each test:
+AI-ийн код нь тест дууссаны дараа **системээс гардаггүй (logout хийдэггүй)** — улмаар тухайн төлөв дараагийн тестэд шилжиж, тестүүд тогтворгүй унах (flaky failure) эрсдэл дагуулдаг.  
+Гараар бичсэн код нь тест бүрийн төгсгөлд logout хийж, үндсэн URL руу шилжсэнийг баталгаажуулдаг:
 ```typescript
 await page.getByRole('button', { name: 'Open Menu' }).click();
 await page.getByRole('link', { name: 'Logout' }).click();
 await expect(page).toHaveURL('/');
 ```
 
-## 5. Trace & Video Configuration
+## 5. Trace болон Video тохиргоо
 
-AI code does not configure trace or video recording.
-Hand-written config has `trace: 'on'` and `video: 'on'`, producing
-debugging artifacts saved in `docs/`.
+AI-ийн кодод Trace болон Video бичлэгийн тохиргоо байдаггүй.  
+Гараар бичсэн тохиргоонд `trace: 'on'`, `video: 'on'` зааж өгснөөр тест унах үед оношлох бүх баримтууд `docs/` хавтсанд хадгалагддаг.
 
-## Summary
+## Дүгнэлт (Summary)
 
-AI-generated tests are functional but have gaps: (1) ID selectors instead
-of semantic locators, (2) fewer assertion types, (3) no negative/error
-test, (4) no test isolation, (5) no trace/video config. AI is useful for
-rapid scaffolding, but **hand review and refinement is essential** — this
-is a core principle of this course.
+AI-ийн үүсгэсэн тест нь ерөнхийдөө ажиллах боловч дараах дутагдалтай талуудтай: (1) Semantic locator-ийн оронд ID selector ашигладаг, (2) Assertion-ий төрөл цөөн, (3) Сөрөг тест байхгүй, (4) Тестийн тусгаарлалт дутуу, (5) Trace/video тохиргоо ороогүй. AI нь суурь кодыг хурдан гаргахад тустай ч **хүн өөрөө нягтлан шалгаж сайжруулах нь нэн чухал** бөгөөд энэ нь тус хичээлийн гол зарчим юм.
