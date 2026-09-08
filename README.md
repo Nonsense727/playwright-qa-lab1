@@ -1,8 +1,10 @@
 # Лаборатори 1: Playwright ашиглан UI автомат тест хийх (UI Automation Testing with Playwright)
 
-**Оюутан:** Амармаэнд Түвшинбаяр (Amarmend Tuvshinbayar)  
-**Хичээл:** F.CSA313 — Програм хангамжийн чанарын баталгаажуулалт ба тестчлэл (Software Quality Assurance & Testing)  
-**Даалгавар:** Playwright UI автомат тестийн лабораторийн ажил  
+**Student:** Amarmend Tuvshinbayar  
+**Code:** B232270036
+**Course:** F.CSA313 — Software Quality Assurance & Testing  
+**Assignment:** Playwright UI automated testing lab
+
 
 ---
 
