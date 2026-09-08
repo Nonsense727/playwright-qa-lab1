@@ -1,8 +1,10 @@
 # Lab 1: UI Automation Testing with Playwright
 
 **Student:** Amarmend Tuvshinbayar  
+**Code:** B232270036
 **Course:** F.CSA313 — Software Quality Assurance & Testing  
 **Assignment:** Playwright UI automated testing lab  
+
 
 ---
 
