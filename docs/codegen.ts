@@ -1,15 +1,14 @@
 import { test, expect } from '@playwright/test';
 
 /*
- * Энэ код нь `npx playwright codegen https://www.saucedemo.com` командын
- * дүрслэл (demonstration). Codegen интерактив орчинд ажилладаг болно:
- * хялуур нь браузер нээж, хурданын үйлдлүүдийг бичиж, кодыг автоматаар
- * үүсгэнэ. Энд кодчилолын үр дүнтэйжүүлсэн бичсэн тестийг үзүүллэв.
+ * This file is a RECORDING of `npx playwright codegen https://www.saucedemo.com`.
+ * Codegen opens an interactive browser, records actions, and generates code
+ * in TS/JS, Python, Java, or C#. This version was generated for comparison
+ * with the hand-written tests in tests/mytest.spec.ts.
  *
- * Үйлчлэл: Codegen нь URL-ийн товч хаяг, CSS ID/selector locator-уудыг
- * ашигладаг. Hand-written кодтой дурсан: locator-уудаа бие даалнууд
- * сайжуулж, data-test аргумент, getByRole, getByText зэрэнд
- * солих боломжтой.
+ * Key difference: codegen uses CSS ID selectors (`#user-name`, `#login-button`)
+ * instead of semantic locators. It also lacks test isolation (no logout),
+ * assertions, and trace/video configuration.
  */
 
 test('login flow (codegen)', async ({ page }) => {

@@ -1,101 +1,113 @@
 import { test, expect } from '@playwright/test';
 
 /*
- * Лаборатори №1 — Playwright UI автомат тест
+ * Lab 1 - Playwright UI Automation Test
  *
- * Энэ файл нь https://www.saucedemo.com вэбсайт дээрх үйлдлүүдийг
- * автоматжуулсан болно.
+ * This file contains 3 automated tests for https://www.saucedemo.com:
+ *   1. Successful Login - logs in with valid credentials and verifies
+ *      the Products page is displayed.
+ *   2. Failed Login - enters incorrect credentials and verifies the
+ *      error message is displayed.
+ *   3. Add to Cart - after login, adds "Sauce Labs Backpack" to cart
+ *      and verifies it appears in the shopping cart.
  *
- * Локаторуудын сонголт (XPath-ийг зайлсхий):
- *   - getByPlaceholder — placeholder тексттэй input уруу нь зориулсон
- *   - getByRole — элементийн дүрэм (role) ба нэртэй button/link-ийг олох
- *   - getByText — хуудасны текстээр элементийг олох (exact: true)
- *   - getByTestId — data-test аргументтэй элементүүдийг олох
+ * Locator Strategy (avoiding XPath):
+ *   - getByPlaceholder: Targets input fields by their placeholder text
+ *     (e.g., "Username", "Password").
+ *   - getByRole: Locates elements by their ARIA role and name
+ *     (e.g., button "Login", link "Logout").
+ *   - getByText: Finds elements by visible text (exact: true for precision)
+ *     (e.g., "Products" heading).
+ *   - getByTestId: Targets elements with a `data-test` attribute
+ *     (e.g., "error", "shopping-cart-link").
+ *
+ * Why not XPath: XPath is tightly coupled to DOM structure; if the DOM
+ * changes (element reordering, wrapping divs), XPath breaks easily.
+ * Semantic locators are more resilient and self-documenting.
  */
 
 /*
- * Тест 1: Амжилттай нэвтрэх
+ * Test 1: Successful Login
  *
- * standard_user / secret_sauce хэрэглэгчийг нэвтрүүлж,
- * "Products" хуудсанд очсонд баталгүйцүүлэх.
+ * Logs in with standard_user / secret_sauce and verifies we reach the
+ * Products (inventory) page.
  */
-test('Амжилттай нэвтрэх', async ({ page }) => {
-  // 1. Бакетсайтруу очих
+test('successful login', async ({ page }) => {
+  // 1. Navigate to the login page
   await page.goto('/');
 
-  // 2. Нэр ба нууц үгийг оруулж авах (placeholder текстээр олох)
-  //    Playwright-ийн Auto-wait нь элемент бэлэн болох хүртэл үлдэнэ —
-  //    энэ нь Selenium-ийн гараарын explicit wait-с аль болох давуу тал.
+  // 2. Fill in username and password using placeholder-based locators.
+  //    Playwright's auto-wait waits for elements to be ready before
+  //    interacting — no need for manual explicit waits like Selenium.
   await page.getByPlaceholder('Username').fill('standard_user');
   await page.getByPlaceholder('Password').fill('secret_sauce');
 
-  // 3. "Login" товчийг дарах (role ба name-аар)
+  // 3. Click the Login button by role and accessible name
   await page.getByRole('button', { name: 'Login' }).click();
 
-  // 4. Баталгүйцүүлэх:
-  //    - "Products" гарчиг үзүүлсэн байгааг шалгах (exact: true)
+  // 4. Assertions:
+  //    - "Products" heading is visible (exact match)
   await expect(page.getByText('Products', { exact: true })).toBeVisible();
-  //    - URL "/inventory.html"-руу солигдсон болно
+  //    - URL changed to inventory page
   await expect(page).toHaveURL(/.*inventory\.html/);
 
-  // 5. Logout хийх (тестийн чист байдал — test isolation)
+  // 5. Logout to ensure test isolation (each test starts fresh)
   await page.getByRole('button', { name: 'Open Menu' }).click();
   await page.getByRole('link', { name: 'Logout' }).click();
   await expect(page).toHaveURL('/');
 });
 
 /*
- * Тест 2: Буруу нууц үгээр нэвтрэх (амжилтгүй нэвтрэх)
+ * Test 2: Failed Login (negative test)
  *
- * Буруу нууц үг оруулсан үед
- * "Username and password do not match any user in this service" —
- * алдааны мессеж гарч байгааг шалгах.
+ * Enters incorrect credentials and verifies the error message
+ * "Username and password do not match any user in this service"
+ * is displayed.
  */
-test('Буруу нууц үгээр нэвтрэх үед алдааны мессеж гарна', async ({ page }) => {
-  // 1. Бакетсайтруу очих
+test('failed login shows error message', async ({ page }) => {
+  // 1. Navigate to the login page
   await page.goto('/');
 
-  // 2. Хэрэглэгчийн нэртэй бөгөөд буруу нууц үг оруулах
+  // 2. Enter a valid username with an incorrect password
   await page.getByPlaceholder('Username').fill('standard_user');
   await page.getByPlaceholder('Password').fill('wrongpassword123');
 
-  // 3. Login товчийг дарах
+  // 3. Click Login
   await page.getByRole('button', { name: 'Login' }).click();
 
-  // 4. Алдааны мессежийг шалгах — data-test="error" аргументтэй
-  //    элементийг олох (getByTestId-ийг ашиглан, testIdAttribute='data-test')
+  // 4. Verify the error message using getByTestId (data-test="error")
   await expect(page.getByTestId('error')).toContainText(
     'Username and password do not match any user in this service'
   );
 });
 
 /*
- * Тест 3: Нэвтэрсний дараа бараа сагслах (post-login action)
+ * Test 3: Add to Cart (post-login action)
  *
- * Нэвтэрсний дараа "Sauce Labs Backpack"-ийг
- * сагслалж, сагс дээр үзсэн бүтээгдэхүүнт зургийг шалгах.
+ * After logging in, adds "Sauce Labs Backpack" to the cart and verifies
+ * it appears in the shopping cart page.
  */
-test('Нэвтэрсний дараа бараа сагслах', async ({ page }) => {
-  // 1. Нэвтрэх
+test('add item to cart after login', async ({ page }) => {
+  // 1. Login
   await page.goto('/');
   await page.getByPlaceholder('Username').fill('standard_user');
   await page.getByPlaceholder('Password').fill('secret_sauce');
   await page.getByRole('button', { name: 'Login' }).click();
 
-  // 2. Баталгүйцүүлэх: Products хуудас үзүүлсэн
+  // 2. Assert: Products page is visible
   await expect(page.getByText('Products', { exact: true })).toBeVisible();
 
-  // 3. "Sauce Labs Backpack" бараагийн "Add to cart" товчийг дарах.
+  // 3. Click "Add to cart" for the first product (Sauce Labs Backpack)
   await page.getByRole('button', { name: 'Add to cart' }).first().click();
 
-  // 4. Сагс руу шилжих (data-test="shopping-cart-link" аргументтэй link)
+  // 4. Navigate to shopping cart (data-test="shopping-cart-link")
   await page.getByTestId('shopping-cart-link').click();
   await expect(page).toHaveURL(/.*cart\.html/);
 
-  // 5. Сагслын дээр "Sauce Labs Backpack" байгааг шалгах
+  // 5. Verify the item is in the cart
   await expect(page.getByText('Sauce Labs Backpack', { exact: true })).toBeVisible();
 
-  // 6. Logout хийж, тестийг зөв төгсгө
+  // 6. Logout to clean up (test isolation)
   await page.getByRole('button', { name: 'Open Menu' }).click();
   await page.getByRole('link', { name: 'Logout' }).click();
   await expect(page).toHaveURL('/');

@@ -1,44 +1,51 @@
-# Лаборатори №1: UI автомат тест — Playwright
+# Lab 1: UI Automation Testing with Playwright
 
-**Оюутан:** Амармэнд Төвшинбаяр (Amarmend Tuvshinbayar)  
-**Хичсэл:** F.CSA313 — Программ хангамжийн чанарын баталгаа ба тест  
-**Ээлж:** 2027 улсарт судалгаа  
-
----
-
-## Төслийн тухай
-
-Энэ төсл нь [Playwright](https://playwright.dev/) UI автоматжуулалтын сан
-аспацтайгаас [SauceDemo](https://www.saucedemo.com) вэбсайтыг тестлэх 3 тестийг
-агнуулсан болно:
-
-| № | Тест нэр | Тодорхолт |
-|---|---|---|
-| 1 | `Амжилттай нэвтрэх` | standard_user/secret_sauce эрхээр нэвтэрж Products хуудсыг харуулна |
-| 2 | `Буруу нууц үгээр нэвтрэх` | Буруу нууц үгийг оруулсан үед алдааны мессежийг шалгана |
-| 3 | `Нэвтэрсний дараа бараа сагслах` | Бараа нэмэлт сагсруулаа, саглаас дах шалгууран |
-
-Бүр тест нь `logout` хийж, авсан URL-ийг шалган төгсдөг (test isolation).
+**Student:** Amarmend Tuvshinbayar  
+**Course:** F.CSA313 — Software Quality Assurance & Testing  
+**Assignment:** Playwright UI automated testing lab  
 
 ---
 
-## Суулгах ба ажиллуулах
+## Project Overview
+
+This project contains Playwright UI automation tests for the
+[SauceDemo](https://www.saucedemo.com) demo e-commerce site. Tests cover
+login functionality, error handling, and post-login interactions.
+
+## Prerequisites
+
+- Node.js v18+
+- npm (comes with Node.js)
+
+## Setup & Run
 
 ```bash
-npm install                  # хамааралыг суулгах
-npx playwright install       # браузер суулгах
-npm test                     # бүх тестийг ажиллуулах
-npm run show-report          # HTML тайлан үзэх
+npm install                   # install dependencies
+npx playwright install        # download browsers (Chromium, Firefox, WebKit)
+npm test                      # run all tests
+npm run show-report           # open HTML test report
+npm run test:headed           # run tests in headed (visible) mode
 ```
+
+## Test Suite
+
+| # | Test Name | Description |
+|---|---|---|
+| 1 | Successful Login | Logs in with standard_user/secret_sauce, verifies Products page |
+| 2 | Failed Login | Enters wrong password, verifies error message displayed |
+| 3 | Add to Cart | After login, adds "Sauce Labs Backpack" to cart, verifies in cart |
+
+Each test ends with a **logout** and URL assertion to ensure test isolation
+(tests don't share state).
 
 ---
 
-## Тестийн код (tests/mytest.spec.ts)
+## Test Code (`tests/mytest.spec.ts`)
 
 ```typescript
 import { test, expect } from '@playwright/test';
 
-test('Амжилттай нэвтрэх', async ({ page }) => {
+test('successful login', async ({ page }) => {
   await page.goto('/');
   await page.getByPlaceholder('Username').fill('standard_user');
   await page.getByPlaceholder('Password').fill('secret_sauce');
@@ -47,188 +54,159 @@ test('Амжилттай нэвтрэх', async ({ page }) => {
   await expect(page.getByText('Products', { exact: true })).toBeVisible();
   await expect(page).toHaveURL(/.*inventory\.html/);
 
-  // logout — test isolation
+  // Logout for test isolation
   await page.getByRole('button', { name: 'Open Menu' }).click();
   await page.getByRole('link', { name: 'Logout' }).click();
   await expect(page).toHaveURL('/');
 });
 ```
 
-### Локаторын сонголт
+### Locator Strategy
 
-XPath-ийг ашиглаагүй — дараах шалтай:
+This project uses Playwright's **semantic locators** exclusively — no XPath:
 
-1. **XPath нь DOM бүтэцтэй холбоотой.** Жишээ нь `//div[@id='login']/form/input[1]`
-   гэж бичсон бол, DOM-той холдоо өөрчлөхөд дохоожиж болно.
-2. **Семантик локаторууд нь бид урьдчилан сэцгэлдэг.** `getByRole`, `getByLabel`,
-   `getByText` нь веб хуудсын доступibility tree-дэд үндэслэн олдог.
-3. **Хянаххан таашитай.** `getByTestId('error')` гэж бичвэл `data-test="error"`
-   атрибуттэй элементийг автоматаар олдог — хувьдал, өгөгдлийн сэсэгдлийг
-   сайжруулдаг.
-
-Хэрэглэсэн локаторуудаа:
-
-| Локатор | Зориулалт |
+| Locator | Use Case |
 |---|---|
-| `getByPlaceholder('Username')` | Input талбарыг placeholder-аар |
-| `getByRole('button', { name: 'Login' })` | Товчийг role+name-аар |
-| `getByText('Products', { exact: true })` | Гарчмыг текстээр, exact match |
-| `getByTestId('error')` | `data-test="error"` элементийг |
-| `getByTestId('shopping-cart-link')` | Саглын линкийг |
+| `getByPlaceholder('Username')` | Input field by placeholder text |
+| `getByRole('button', { name: 'Login' })` | Button by ARIA role + accessible name |
+| `getByText('Products', { exact: true })` | Element by visible text (exact match) |
+| `getByTestId('error')` | Element by `data-test` attribute (configured in `playwright.config.ts`) |
 
-> `exact: true` — true аргумент нь текст олдоход дэлгэрэнгүй утгатай.
-> `getByText('Products')` үзөх болно `"Products Page"`-ийг тааруулж мөн
-> элементийг нь match хийж болох. `exact: true` нь бүрэлдүүлсэн
-> `"Products"`-г л тааруулах болно.
+**Why avoid XPath:** XPath is tightly coupled to DOM structure. If the DOM
+changes (element reordering, wrapping divs), XPath breaks. Semantic locators
+are resilient and self-documenting — they describe *what* to interact with,
+not *where* it is in the tree.
 
 ---
 
-## Codegen ба Trace Viewer
+## Codegen & Trace Viewer
 
 ### Codegen (`docs/codegen.ts`)
 
-`npx playwright codegen https://www.saucedemo.com` команд нь интерактив
-орчинд браузер нээж, үйлдлүүдийг бичиж автоматаар код болгодог. Миний
-codegen үр дүнтэй `docs/codegen.ts`-д бичсэн болно.
+`npx playwright codegen https://www.saucedemo.com` opens an interactive browser
+that records actions and generates test code. The output is saved in
+`docs/codegen.ts` as a reference.
 
-**Codegen-ийн код vs Hand-written кодын Ялгаа:**
-
-| Шинж | Codegen | Hand-written |
+| Aspect | Codegen Output | Hand-Written Code |
 |---|---|---|
-| Locator | `#user-name`, `#password`, `#login-button` (ID selector) | `getByPlaceholder`, `getByRole` (семантик) |
+| Locator | `#user-name`, `#password`, `#login-button` (ID/ CSS selectors) | `getByPlaceholder`, `getByRole` (semantic locators) |
 | Assertion | `toHaveTitle`, `toContainText` | `toBeVisible`, `toHaveURL`, `toContainText` |
-| Test isolation | Logout биш | Бүр logout хийж, URL шалгана |
-| Screenshot/trace | Алимаа | Trace, video, screenshot |
+| Test isolation | No logout | Each test logs out, verifies URL |
+| Trace/Video | Not configured | `trace: 'on'`, `video: 'on'` in config |
+| Negative test | Not included | Error message verification test present |
 
-Codegen-ийн локатор нь ID (`#` selector) ашигладаг. ID сонгогч нь
-элементийн ID-ээ салгичлалтын ашиглан олдог. Харин hand-written-д `getByRole`,
-`getByTestId`, `getByPlaceholder` зэрэнд семантик локатор ашигласан нь
-DOM-ийг өөрчлөхөд шулайж, хянаххан таашитай.
+**Key differences:** Codegen generates ID-based selectors (`#user-name`) and
+lacks test isolation (no logout), error handling, and configuration. Hand-written
+code uses semantic locators that are more maintainable and includes proper
+assertions, logout cleanup, and trace/video recording.
 
 ### Trace Viewer
 
-Trace viewer-ийг ашиглан `docs/failed-login-trace.zip`-г нь үзжэв:
+Traces were used to debug a deliberately broken test:
 
 ```bash
 npx playwright show-trace docs/failed-login-trace.zip
 ```
 
-Энд trace нь:
-- DOM snapshot (алдаа гарсны үеийн вебсайт бүтэц)
-- Action log (click, fill, etc. тулгууртай залгамжилт)
-- Screenshots (алхам бүрийн вебсайт дүрслэл)
-- Console messages (JS консол логууд)
+The trace viewer provides:
+- **DOM snapshot** — what the page looked like at each step
+- **Action log** — every click, fill, navigation with timestamps
+- **Screenshots** — visual record of each step
+- **Console messages** — JS console output and errors
 
-Миний trace-ийн ашиглалт:
-1. `Буруу нууц үгээр нэвтрэх` тестийг санаатай унагаж (`toContainText`
-   assertion-ийг буруу утгаар авч үзьсэн)
-2. Trace viewer-тэй trace-ыг нь нээж, алдааны чиглэлийг мөшгийн
-3. assertion-ийг засаад, trace-ийг нь `docs/failed-login-trace.zip`-д
-   хадгалсон
-
-Энэ Trace-ийн алдаа:
-- `getByTestId('error')` locator нь `data-test="error"` атрибуттэй
-  `<h3>` элементийг илрүүлсэн
-- Expected: `"ЭНЭ НЬ Буруу орсон алдааны мессеж"` (буруу assertion)
-- Received: `"Epic sadface: Username and password do not match..."` (зөв
-  алдааны текст)
+**Debugging workflow:**
+1. Temporarily changed the expected error message text to an incorrect value
+2. Ran the test with `--trace on` — test failed as expected
+3. Opened the trace in trace viewer — confirmed `getByTestId('error')` correctly
+   located the `<h3 data-test="error">` element
+4. The trace showed "Expected" (wrong text) vs "Received" (correct text),
+   confirming the locator was working — only the assertion text was wrong
+5. Fixed the assertion and saved the failing trace to `docs/failed-login-trace.zip`
 
 ---
 
-## Нотолгоо (Evidence)
+## Evidence Files
 
-| Файл | Тодорхол |
+| File | Description |
 |---|---|
-| `docs/codegen.ts` | Codegen-ийн үр дүн |
-| `docs/failed-login-trace.zip` | Буруу assertion-ийн trace |
-| `docs/failed-login-video.webm` | Буруу тестийн видео |
-| `docs/passed-login-trace.zip` | Амжилттай нэвтрэх trace |
-| `docs/passed-login-video.webm` | Амжилттай нэвтрэх видео |
-| `docs/add-to-cart-trace.zip` | Бараа сагслалтын trace |
-| `playwright-report/index.html` | HTML тест тайлан |
+| `docs/codegen.ts` | Codegen-generated test output for comparison |
+| `docs/failed-login-trace.zip` | Trace from deliberately broken assertion |
+| `docs/failed-login-video.webm` | Video of the failing test run |
+| `docs/passed-login-trace.zip` | Trace from successful login test |
+| `docs/passed-login-video.webm` | Video of successful login test |
+| `docs/add-to-cart-trace.zip` | Trace from add-to-cart test |
+| `playwright-report/index.html` | Full HTML test report with embedded traces |
 
 ---
 
-## Playwright ба Selenium-ийн харьцуулсан
+## Playwright vs Selenium Comparison
 
-| Шинж | Selenium | Playwright |
+| Feature | Selenium | Playwright |
 |---|---|---|
-| Лиценз | Apache 2.0 (open source) | Apache 2.0 (open source) |
-| Хүлээлт (waits) | Гараар explicit wait бичих шаардлагатай | Auto-wait — элемент бэлэн болтол автоматаар хүлээнэ |
-| Driver | Хөтөч бүрд тусдаа driver суулгана (ChromeDriver, GeckoDriver) | Хөтөчүүд нэг командаар суудаг (`playwright install`) |
-| Тест бичих туслах | Selenium IDE — код болгодог | Codegen — үйлдлээ бичүүлж код болгодог |
-| Дебаг | Лог, скриншот | Trace viewer — алхам бүрийн бичлэг, DOM snapshot |
-| Хэл дэмжлэг | Java, Python, C#, JS | JS/TS, Python, Java, C# |
+| License | Apache 2.0 (free, open source) | Apache 2.0 (free, open source) |
+| Wait handling | Manual explicit waits required (`WebDriverWait`) | Auto-wait — waits for element readiness automatically |
+| Browser setup | Separate driver per browser (ChromeDriver, GeckoDriver) | Single command: `npx playwright install` |
+| Test recording | Selenium IDE (browser extension) | Codegen (built-in) |
+| Debugging | Logs, screenshots | Trace viewer with DOM snapshots, action log, console |
+| Language support | Java, Python, C#, JavaScript | TS/JS, Python, Java, C# |
 
-### Хувийн бүрэн ярилцлагаа
+### Personal Assessment (5 key points)
 
-1. Selenium-тэй харьцуулбал, Playwright-ийн **auto-wait** нь маш чухал болсон.
-   Selenium дээр `WebDriverWait` бичих нь алдартай, давтагдалтай ажил.
-   Playwright дээр элемент бэлэн болох хүртэл үлдэнэ — урьдрал, код
-   багатай.
+1. **Auto-wait is a game-changer.** Playwright's auto-wait automatically
+   waits for elements to be ready before interacting. In Selenium, I had
+   to manually write `WebDriverWait` everywhere — tedious, error-prone,
+   and made tests much longer. With Playwright, `await page.getByRole('button',
+   { name: 'Login' }).click()` just works.
 
-2. Driver менеджерийн хувид, Selenium дээр ChromeDriver, GeckoDriver
-   гээд тус тус суулгах ёстой. Ингэх нь орчингүй сайжруулах. Playwright дээр
-   `npx playwright install` л гэсэн нэг командаар бүх браузер, FFmpeg,
-   headless shell зэргийг суулгаж авдаг.
+2. **Browser setup is significantly simpler.** Selenium requires downloading
+   the correct ChromeDriver/GeckoDriver per browser version — a common
+   source of "session not created" errors. Playwright bundles everything
+   with `npx playwright install` — one command, all browsers ready.
 
-3. **Trace viewer** нь машинаа давуу шанс. Тест алдаа гарсан үед trace-г нь
-   нээсэр DOM snapshot, action log, screenshot, console log гээд бүрэн
-   мэдээллийг үзэж чаддаг. Selenium дээр лог маань зөндлөн, screenshot л
-   зарим.
+3. **Trace viewer is invaluable for debugging.** When a test fails, the
+   trace gives me a DOM snapshot, action timeline, screenshots, and console
+   logs all in one interactive viewer. Selenium debugging was limited to
+   static screenshots and log files that were hard to correlate.
 
-4. **Config** дээр `trace: 'on'`, `video: 'on'` гэж ашигласан бол Playwright
-   бүр тестийг trace, video бичэх нь Selenium дээр миний алхам туслахгүй.
-   Selenium дээр video бичихийг суулгах нь их ажл.
+4. **Built-in test config.** Playwright's config file (`playwright.config.ts`)
+   elegantly handles base URLs, trace/video settings, retries, and parallel
+   execution. In Selenium, these required custom framework code or TestNG/JUnit
+   XML configuration files.
 
-5. **Locators**-ийн хувид, Playwright-ийн `getByRole`, `getByText`,
-   `getByTestId` нь семантик, хянаххан таашитай. Selenium дээр CSS selector,
-   XPath ашигласан болохоор DOM-ийг өөрчлөхөд сул.
-
----
-
-## AI туслах судалгаа (нэмэлт)
-
-AI (ChatGPT, Claude, Copilot) ашиглан saucedemo-ийн login тестийг
-үүсгүүлсэн. Дотоод `docs/codegen.ts`-д codegen-ийн үр дүнтэй.
-
-AI-гээр үүсгэсэн/коджинг-ийн кодтой hand-written кодын ялгаа:
-
-1. **Locator**: AI/Copilot нь ID selector (`#user-name`) ашигладаг.
-   Hand-written кодтой дурсан `getByPlaceholder`, `getByRole` нь
-   семантик, шуяртай.
-2. **Assertion**: AI нь `toHaveTitle`, `toContainText`-ээр л шалгууралт
-   хийдэг. Hand-written кодтой дурсан `toBeVisible`, `toHaveURL` зэрэг
-   нэмж, баталгүйцүүлэлт өргөжим.
-3. **Test isolation**: AI нь logout хийхгүй. Hand-written кодтой дурсан
-   бүрийг logout-рүүлж, URL-ийг шалгайдаг.
-4. **Error handling**: AI нь алдааны тестийг бичихгүй. Hand-written кодтой
-   дурсан `getByTestId('error')`-р алдааны мессежийг шалгадаг.
-5. **Trace/Video**: AI нь trace, video-ийг тохируулахгүй. Hand-written кодтой
-   дурсан config-д `trace: 'on'`, `video: 'on'` бичсэн.
-
-AI-г шүүмжтэй ашиглах нь заавал биш — миний ажил нь өөрийн 100% hand-written
-болсон.
+5. **Better locator API.** Playwright's locators (`getByRole`, `getByLabelText`,
+   `getByTestId`) are designed around web accessibility standards. They read
+   like English and are far more maintainable than the CSS selectors and XPath
+   expressions I had to use in Selenium.
 
 ---
 
-## Ажлын явц (Commits)
+## AI Assistance Comparison (optional extra)
 
-| Commit | Тодорхол |
+AI tools (ChatGPT, Claude, Copilot) can generate test code, but the output
+typically differs from hand-written code in important ways. See
+`ai-comparison.md` for the full comparison.
+
+**Key differences AI-generated tests would have:**
+1. ID/CSS selectors instead of semantic locators
+2. Fewer assertion types (just `toContainText`, missing `toBeVisible`/`toHaveURL`)
+3. No test isolation (no logout between tests)
+4. No negative test case (error message verification)
+5. No trace/video configuration
+
+---
+
+## Commit History
+
+| Commit | Description |
 |---|---|
 | `feat: initialize Playwright TypeScript project` | package.json, playwright.config.ts, .gitignore |
-| `feat: add first test — successful login with assertions` | mytest.spec.ts (test 1) |
-| `feat: add negative test — error message verification on failed login` | mytest.spec.ts (test 2 нэмэлт) |
-| `feat: add post-login test — add to cart and verify in shopping cart` | mytest.spec.ts (test 3 нэмэлт) |
-| `feat: add codegen output and trace evidence` | docs/codegen.ts, docs/*.zip, docs/*.webm |
-| `docs: add README with reflections and Selenium comparison` | README.md, ai-comparison.md |
-
-### Commit хийхдээ анхаарсан зүйлс
-
-1. **Бүх ажлыг нэг commit-д хийсэнгүй.** Ажлын явц: project setup → test 1 →
-   test 2 → test 3 → codegen/trace → README.
-2. **Commit author зөв:** Amarmend Tuvshinbayar / tobioshy727@gmail.com.
-3. **Git history хянасан:** `git log --oneline` дээр 6 commit байна.
+| `feat: add first test - successful login with assertions` | tests/mytest.spec.ts (test 1) |
+| `feat: add negative test - error message verification on failed login` | tests/mytest.spec.ts (test 2) |
+| `feat: add post-login test - add to cart and verify in shopping cart` | tests/mytest.spec.ts (test 3) |
+| `feat: add codegen output, trace evidence, and HTML test report` | docs/, playwright-report/ |
+| `docs: add README with reflections and Playwright vs Selenium comparison` | README.md, ai-comparison.md |
+| `chore: add tsconfig.json and fix README commit references` | tsconfig.json |
+| `docs: translate all comments and READMEs to English` | README.md, ai-comparison.md, tests/mytest.spec.ts, docs/codegen.ts |
 
 ---
 
@@ -239,25 +217,8 @@ node_modules/
 test-results/
 package-lock.json
 .env
+QA_lab1.pdf
 ```
 
-`node_modules/`, `test-results/` нь .gitignore-д бичсэн болно. Харин
-`playwright-report/`, `docs/` нь repo-д багтаж байна.
-
----
-
-## Лаборатори шаардлагын хангуулаас
-
-| Шаардлага | Төлөв |
-|---|---|
-| GitHub public репозиторийн линк | ✅ https://github.com/Nonsense727/playwright-qa-lab1 |
-| .gitignore (node_modules, test-results орсонгүй) | ✅ |
-| 3+ утга төгөлдөр commit | ✅ 6 commit |
-| Playwright project, `npx playwright test` ажилладаг | ✅ |
-| ≥3 тест: амжилттай нэвтрэх, амжилтгүй, пост-логин үйлдэл | ✅ |
-| Modern locator (getByRole/getByLabel/getByText/getByTestId) + assertion | ✅ |
-| Trace / HTML report / бичлэг repo-д байгаа | ✅ |
-| README: хийсэн ажил, Selenium харьцуулалт (5-10 өгүүлбэр) | ✅ |
-| Кодонд коммент байгаа | ✅ |
-| Бүр тест logout-оор төгсгөөд URL шалгадаг | ✅ |
-| XPath-ийг зайлсхий | ✅ (getByRole, getByTestId хэрэглэсэн) |
+`node_modules/` and `test-results/` are excluded. `playwright-report/`,
+`docs/`, and all source files are tracked.
