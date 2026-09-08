@@ -218,8 +218,8 @@ AI-г шүүмжтэй ашиглах нь заавал биш — миний а
 |---|---|
 | `feat: initialize Playwright TypeScript project` | package.json, playwright.config.ts, .gitignore |
 | `feat: add first test — successful login with assertions` | mytest.spec.ts (test 1) |
-| `feat: add negative test — error message verification` | mytest.spec.ts (test 2 нэмэлт) |
-| `feat: add post-login test — add to cart and verify` | mytest.spec.ts (test 3 нэмэлт) |
+| `feat: add negative test — error message verification on failed login` | mytest.spec.ts (test 2 нэмэлт) |
+| `feat: add post-login test — add to cart and verify in shopping cart` | mytest.spec.ts (test 3 нэмэлт) |
 | `feat: add codegen output and trace evidence` | docs/codegen.ts, docs/*.zip, docs/*.webm |
 | `docs: add README with reflections and Selenium comparison` | README.md, ai-comparison.md |
 
