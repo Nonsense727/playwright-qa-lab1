@@ -61,8 +61,8 @@ test('add item to cart after login', async ({ page }) => {
   // 2. Products хуудас харагдаж буйг шалгах
   await expect(page.getByText('Products', { exact: true })).toBeVisible();
 
-  // 3. Эхний барааг сагсанд нэмэх
-  await page.getByRole('button', { name: 'Add to cart' }).first().click();
+  // 3. Sauce Labs Backpack-г сагсанд нэмэх (getByTestId-р зэрэмлэлт)
+  await page.getByTestId('add-to-cart-sauce-labs-backpack').click();
 
   // 4. Сагс руу шилжих
   await page.getByTestId('shopping-cart-link').click();
